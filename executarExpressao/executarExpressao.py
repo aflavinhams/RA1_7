@@ -1,61 +1,88 @@
-# Criar um método, antes do Autômato Finito Determinístico, para lidar com parênteses aninhados.
-# 1 EXPRESSÃO POR LINHA
+# Função do gerarAssembly (copia de gerarAssembly, apagar depois)
+def is_num(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 
 def executarExpressao(tokens):
     
-    # estrutura de dicionário para gerenciar múltiplas variáveis na memória
+    # Conjunto de operações
+    operacoes = {"+", "-", "*", "/", "//", "%", "^"}
+    # Pilha para avaliar expressões RPN
+    stack = []
+    # Estrutura de dicionário para gerenciar múltiplas variáveis na memória
     memoria = {}
-    linha_atual = 1
-    # vetor de resultados para exibirResultados
+    # Vetor de histórico de resultados para exibirResultados
     resultados = []
     
-    # (N RES): retorna resultado da expressão N linhas anteriores
-    def get_res(n_linhas):
-        # N é um inteiro não negativo
-        if n_linhas > 0 and int: #???
-            return memoria[n_linhas] # ir armazenando o resultado de cada linha, coloca nome o numero mesmo
-    
-    # (V MEM): armazena valor em uma memória
-    # MEM pode ser qualquer conjunto de letras maiúsculas
-    def store_mem(valor, mem):
-        memoria[mem] = valor
-    
-    # (MEM): retorna o valor armazenado em MEM
-    def get_mem(mem):
-        if memoria[mem]:
-            return memoria[mem]
-        # se memoria não inicializada, retorna 0.0
-        return 0.0
-    
-    # PILHA avaliar expressões RPN
-    # Implementar operações (+, -, *, /, %, ^) com precisão de 64 bits (IEEE 754) -> aparentemente float ja da conta, investigar mesmo
+    # Implementar operações (+, -, *, /, %, ^) com precisão de 64 bits (IEEE 754)
     def operation(num1, num2, type):
         match type:
             case "+":
                 return (num1 + num2)
             case "-":
-                # qual a ordem??? A- B ou B - A? tem numero ja negativo?
                 return (num1 - num2)
             case "*":
                 return (num1 * num2)
             case "/":
                 return (num1 / num2)
-            case "//": # para inteiros ??????
+            case "//":
                 return (num1 // num2)
             case "%":
                 return (num1 % num2)
             case "^":
                 return (num1 ** num2)
     
+    # Percorre cada token para executar as expressões
+    for i, token in enumerate(tokens):
+        
+        # Se token for Número
+        if is_num(token):
+            stack.append(float(token)) # Empilha o número na pilha
+
+        # Se token for Operacao
+        elif token in operacoes:
+            num2 = stack.pop() # Desempilha o primeiro número
+            num1 = stack.pop() # Desempilha o segundo número
+            resultado = operation(num1, num2, token)
+            # Empilha o resultado
+            stack.append(resultado)
+        
+        # Operação RES
+        # (N RES): retorna resultado da expressão N linhas anteriores
+        elif token == "RES":
+            if stack:
+                n = int(stack.pop())
+                # N é um inteiro não negativo
+                if n > 0 and n < len(resultados): # and int ???
+                    res = resultados[-(n+1)]
+                    # resultados.append(res) # ir armazenando o resultado de cada linha
+                    stack.append(res)
+
+        # Operação MEM
+        # MEM pode ser qualquer conjunto de letras maiúsculas!
+        elif token.isalpha() and token.isupper():
+            # (V MEM): armazena valor em uma memória
+            if i > 0 and is_num(tokens[i-1]): # revisar
+                v = stack.pop()
+                memoria[token] = v
+            # (MEM): retorna o valor armazenado em MEM
+            else:
+                if token in memoria:
+                    stack.append(memoria[token])
+                else:
+                    stack.append(0.0)
     
-    # atualiza RESULTADOS e MEMORIA
-    
-    
-    
-    return resultados
+    # fazer historico de resultados
+    return stack
 
 
-# Gerenciar a memória MEM para comandos (V MEM) e (MEM);
-# histórico de resultados (?)
-
+# testes
 ex_tokens = ['(', '3.14', '2.0', '+', ')']
+ex_tokens = ['(', '(', '1.5', '2.0', '*', ')', '(', '3.0', '4.0', '*', ')', '/', ')']
+ex_tokens = ['(', '5.0', 'MEM', ')']
+ex_tokens = ['(', '2', 'RES', ')']
+ex_tokens = ['(', '10.5', 'CONTADOR', ')', 'CONTADOR']
+print(executarExpressao(ex_tokens))

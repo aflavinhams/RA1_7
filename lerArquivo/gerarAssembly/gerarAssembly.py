@@ -11,7 +11,7 @@ def gerarAssembly(tokens):
     operations = {"+": "ADD", "-": "SUB", "*": "MUL", "/": "SDIV", "%": "MOD", "^": "POW"}
     reg_count = 0
 
-    for token in tokens: 
+    for token in tokens:
 
         if is_num(token): #se o token for um número
             reg = f"R{reg_count}" #cria um novo registrador
