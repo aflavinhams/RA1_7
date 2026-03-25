@@ -22,8 +22,7 @@ def gerarAssembly(tokens, cod_assembly=[".global _start\n_start:"]):
         "+": "ADD",
         "-": "SUB",
         "*": "MUL",
-        "//": "SDIV",   # divisão inteira com sinal
-        "//u": "UDIV",  # divisão inteira sem sinal
+        "//": "SDIV",   
         "%": "MOD",
         "^": "POW"
     }
