@@ -121,8 +121,14 @@ def estadoOperador(linha, i):
   # pego o char da posicao atual
   operador = linha[i]
 
+  # verificcando para caso da divisao inteira
+  # se / vier seguido de outro /, eu salvo // no comando e pulo pra proxima posicao
+  if operador == '/' and i + 1 < len(linha) and linha[i+1] == '/':
+    operador == '//'
+    i += 1
+
   # valido se é um dos operadores válidos
-  if operador not in ['+', '-', '*', '/', '%', '^']:
+  if operador not in ['+', '-', '*', '/', '//', '%', '^']:
     raise ValueError("Operador inválido: " + operador)
 
   # retorno o operador e mando pra proxima posicao
@@ -163,7 +169,7 @@ def estadoComando(linha, i):
 # funcoes de testes
 def testes_validos():
   
-  print(parseEspressao("3 4 +"))
+  print(parseEspressao("3 4 //"))
 
   print(parseEspressao("3.14 2 * MEM"))
 
@@ -180,3 +186,5 @@ def  teste_caractere_invalido():
 def teste_parenteses_desbalanceados():
 
   parseEspressao("(3 + 2")
+
+testes_validos()
