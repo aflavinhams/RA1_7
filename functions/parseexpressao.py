@@ -147,16 +147,16 @@ def estadoComando(linha, i):
   # inicio o comando vazio
   comando = ''
 
-  # percorro a linha ate o final se for um char alphanumerico
-  while i < len(linha) and linha[i].isalpha():
+  # percorro a linha ate o final se for um char alphanumerico maiusculo
+  while i < len(linha) and linha[i].isalpha() and linha[i].isupper():
 
     # adiciono ao meu comando e pulo pra proxima posicao
     comando += linha[i]
     i += 1
 
-  # se não for um dos comandos especiais validos retorna erro
-  if comando not in ['RES', 'MEM']:
-    raise ValueError("Comando inválido: " + comando)
+  # se não for um comando valido retorna erro
+  if comando == '':
+    raise ValueError("Comando inválido")
 
   return comando, i
 
