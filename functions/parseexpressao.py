@@ -169,22 +169,22 @@ def estadoComando(linha, i):
 # funcoes de testes
 def testes_validos():
   
-  print(parseEspressao("3 4 //"))
+  print(parseExpressao("3 4 //"))
 
-  print(parseEspressao("3.14 2 * MEM"))
+  print(parseExpressao("3.14 2 * MEM"))
 
-  print(parseEspressao("(3 + 2)"))
+  print(parseExpressao("(3 + 2)"))
 
 def teste_dois_pontos():
 
-  print(parseEspressao("3.14.5"))
+  print(parseExpressao("3.14.5"))
 
 def  teste_caractere_invalido():
 
-  parseEspressao("3 4 @")
+  parseExpressao("3 4 @")
 
 def teste_parenteses_desbalanceados():
 
-  parseEspressao("(3 + 2")
+  parseExpressao("(3 + 2")
 
 testes_validos()
