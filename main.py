@@ -4,8 +4,8 @@ from functions.gerarAssembly import gerarAssembly
 from functions.exibirResultados import exibirResultados
 from functions.executarExpressao import executarExpressao
 
-print(f"Arquivo: {ler_arquivo('arquivosTeste/teste.txt')}\n")
-arq = ler_arquivo("arquivosTeste/teste.txt")
+print(f"Arquivo: {ler_arquivo('arquivosTeste/teste2.txt')}\n")
+arq = ler_arquivo("arquivosTeste/teste2.txt")
 
 valid_tokens = []
 resultados = []
