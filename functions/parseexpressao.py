@@ -166,7 +166,9 @@ def estadoComando(linha, i):
 
   return comando, i
 
-# funcoes de testes
+'''
+# TESTES
+
 def testes_validos():
   
   print(parseExpressao("3 4 //"))
@@ -188,3 +190,4 @@ def teste_parenteses_desbalanceados():
   parseExpressao("(3 + 2")
 
 testes_validos()
+'''

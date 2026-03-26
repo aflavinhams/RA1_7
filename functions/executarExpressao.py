@@ -76,8 +76,9 @@ def executarExpressao(tokens: list[str], memoria: dict[str, float], resultados: 
     # Atualiza histórico de resultados
     if stack: # Verificação pois o comando (V MEM) apenas armazena na memória, não retorna resultado!
         resultados[linha_atual] = stack.pop()
-
-# testes
+        
+'''
+# TESTES
 testes =[
     ['(', '3.14', '2.0', '+', ')'],
     ['1', 'RES'],
@@ -110,3 +111,4 @@ for teste in testes:
     linha += 1
 print(resultados)
 print(memoria)
+'''

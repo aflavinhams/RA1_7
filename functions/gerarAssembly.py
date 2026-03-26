@@ -1,33 +1,108 @@
 def is_num(s):
     try:
-        float(s) # caso seja possível transformar o caractere em float, é um número
+        float(s) # tenta virar número
         return True
     except ValueError:
         return False
 
 def is_float(s):
-    # verifica se o número possui parte decimal (ponto flutuante)
-    return '.' in s
+    return '.' in s # tem ponto = decimal
 
-def gerarAssembly(tokens, cod_assembly=[".global _start\n_start:"]):
-    stack = []  # pilha — cada item é uma tupla (registrador, is_float)
-    memory = {}  # memória para valores — cada item é (registrador, is_float)
-    results = []  # lista de resultados — cada item é uma tupla (registrador, is_float)
-    variables = []  # lista de variáveis declaradas (para gerar seção .data)
-    float_constants = {}  # dicionário de constantes float → label (para gerar seção .data)
-    float_const_count = 0  # contador para criação de labels de constantes float
+def criarState():
+    return {
+        "cod_assembly": [
+            ".syntax unified",       # sintaxe moderna
+            ".arch_extension idiv",  # libera SDIV
+            ".global _start",
+            "_start:"
+        ],
+        "results": {},          # resultados salvos por linha
+        "memory": {},           # variáveis salvas
+        "variables": [],        # variáveis pra declarar no .data
+        "result_lines": [],     # resultados pra declarar no .data
+        "float_constants": {},  # floats já declarados
+        "float_const_count": 0, # contador de floats
+        "pow_count": 0          # contador de loops de potência
+    }
 
-    # operações inteiras e seus correspondentes em assembly
+def finalizarAssembly(state):
+    state["cod_assembly"].append("\n.data")
+
+    for var in state["variables"]:
+        state["cod_assembly"].append(f"  addr_{var}: .word 0")
+
+    for label, is_float in state["result_lines"]:
+        if is_float:
+            state["cod_assembly"].append(f"  {label}: .float 0.0")
+        else:
+            state["cod_assembly"].append(f"  {label}: .word 0")
+
+    for value, label in state["float_constants"].items():
+        state["cod_assembly"].append(f"  {label}: .float {value}")
+
+    return "\n".join(state["cod_assembly"])
+
+def gerarMOD(r1, r2, cod_assembly, reg_count):
+    # resto = r1 - (r1/r2 * r2) via SDIV + MLS
+    reg_quoc = f"r{reg_count[0]}"
+    reg_count[0] += 1
+    cod_assembly.append(f"  SDIV {reg_quoc}, {r1}, {r2}") # quociente
+    cod_assembly.append(f"  MLS {r1}, {reg_quoc}, {r2}, {r1}") # resto fica em r1
+
+def gerarPOW(r1, r2, cod_assembly, reg_count, state):
+    # multiplica r1 por ele mesmo r2 vezes
+    pow_id = state["pow_count"]
+    state["pow_count"] += 1
+
+    reg_result = f"r{reg_count[0]}" # acumula o resultado
+    reg_count[0] += 1
+    reg_base = f"r{reg_count[0]}" # guarda a base
+    reg_count[0] += 1
+
+    label_loop = f"pow_loop_{pow_id}"
+    label_end  = f"pow_end_{pow_id}"
+
+    cod_assembly.append(f"  MOV {reg_result}, #1")
+    cod_assembly.append(f"  MOV {reg_base}, {r1}")
+    cod_assembly.append(f"{label_loop}:")
+    cod_assembly.append(f"  CMP {r2}, #0")           # expoente zerou?
+    cod_assembly.append(f"  BEQ {label_end}")         # sim → sai
+    cod_assembly.append(f"  MUL {reg_result}, {reg_result}, {reg_base}") # result *= base
+    cod_assembly.append(f"  SUB {r2}, {r2}, #1")      # expoente--
+    cod_assembly.append(f"  B {label_loop}")
+    cod_assembly.append(f"{label_end}:")
+
+    return reg_result
+
+def gerarAssembly(tokens, state, linha_atual):
+    stack = []  # pilha: (registrador, é_float?)
+
+    reg_count  = [0] # próximo rX disponível
+    vreg_count = [0] # próximo SX disponível
+
+    cod_assembly    = state["cod_assembly"]
+    results         = state["results"]
+    memory          = state["memory"]
+    variables       = state["variables"]
+    float_constants = state["float_constants"]
+
+    def alloc_r():
+        r = f"r{reg_count[0]}"
+        reg_count[0] += 1
+        return r
+
+    def alloc_s():
+        s = f"S{vreg_count[0]}"
+        vreg_count[0] += 1
+        return s
+
     int_operations = {
         "+": "ADD",
         "-": "SUB",
         "*": "MUL",
-        "//": "SDIV",   
-        "%": "MOD",
-        "^": "POW"
+        "//": "SDIV",
     }
 
-    # operações equivalentes em VFP para floats (NEON excluído no CPUlator)
     float_operations = {
         "+": "VADD.F32",
         "-": "VSUB.F32",
@@ -35,148 +110,135 @@ def gerarAssembly(tokens, cod_assembly=[".global _start\n_start:"]):
         "/": "VDIV.F32"
     }
 
-    all_operations = set(int_operations.keys()) | {"/"}
-
-    reg_count = 0   # contador para registradores inteiros (R0, R1, ...)
-    vreg_count = 0  # contador para registradores VFP (S0, S1, ...)
+    all_operations = set(int_operations.keys()) | {"/", "%", "^"}
 
     for i, token in enumerate(tokens):
 
-        if is_num(token): # se o token for um número
-            if is_float(token): # número float → carrega em registrador VFP (S)
-                # reutiliza o label se a constante já foi declarada
+        if is_num(token):
+            if is_float(token): # decimal → registrador VFP
                 if token not in float_constants:
-                    label = f"fconst_{float_const_count}" # cria um label para a constante float
-                    float_constants[token] = label # associa o valor ao label
-                    float_const_count += 1 # incrementa o contador de constantes float
+                    label = f"fconst_{state['float_const_count']}"
+                    float_constants[token] = label
+                    state["float_const_count"] += 1
                 else:
-                    label = float_constants[token] # reutiliza o label existente
+                    label = float_constants[token] # reutiliza label existente
 
-                reg_addr = f"R{reg_count}" # registrador temporário para o endereço
-                reg_count += 1 # incrementa o contador de registradores inteiros
-                s_reg = f"S{vreg_count}" # registrador VFP para o valor float
-                vreg_count += 1 # incrementa o contador de registradores VFP
+                reg_addr = alloc_r()
+                s_reg    = alloc_s()
+                cod_assembly.append(f"  LDR {reg_addr}, ={label}") # endereço do float
+                cod_assembly.append(f"  VLDR {s_reg}, [{reg_addr}]") # carrega o valor
+                stack.append((s_reg, True))
 
-                cod_assembly.append(f"  LDR {reg_addr}, ={label}") # carrega o endereço da constante
-                cod_assembly.append(f"  VLDR {s_reg}, [{reg_addr}]") # carrega o valor float do endereço
+            else: # inteiro → MOV direto
+                reg = alloc_r()
+                cod_assembly.append(f"  MOV {reg}, #{token}")
+                stack.append((reg, False))
 
-                stack.append((s_reg, True)) # empilha o registrador VFP como float
-
-            else: # número inteiro → carrega em registrador inteiro (R)
-                reg = f"R{reg_count}" # cria um novo registrador inteiro
-                cod_assembly.append(f"  MOV {reg}, #{token}") # copia o número para o registrador criado
-                stack.append((reg, False)) # empilha o registrador inteiro
-                reg_count += 1 # incrementa o contador de registradores inteiros
-
-        elif token in all_operations: # se o token for um operador
-            # desempilha dois operandos
+        elif token in all_operations:
             r2, r2_float = stack.pop()
             r1, r1_float = stack.pop()
+            is_float_op = r1_float or r2_float # basta um ser float
 
-            is_float_op = r1_float or r2_float # operação é float se qualquer operando for float
+            if token == "%": # resto → SDIV + MLS
+                gerarMOD(r1, r2, cod_assembly, reg_count)
+                stack.append((r1, False))
 
-            if token == "/" or (is_float_op and token in float_operations): # operação com floats → usa VFP
-                # converte r1 para registrador VFP se ainda for inteiro
-                if not r1_float:
-                    s1 = f"S{vreg_count}"
-                    vreg_count += 1 # incrementa o contador de registradores VFP
-                    cod_assembly.append(f"  VMOV {s1}, {r1}") # move inteiro para VFP
-                    cod_assembly.append(f"  VCVT.F32.S32 {s1}, {s1}") # converte para float
+            elif token == "^": # potência → loop
+                reg_result = gerarPOW(r1, r2, cod_assembly, reg_count, state)
+                stack.append((reg_result, False))
+
+            elif token == "/" or (is_float_op and token in float_operations): # op float → VFP
+                if not r1_float: # converte r1 pra float se precisar
+                    s1 = alloc_s()
+                    cod_assembly.append(f"  VMOV {s1}, {r1}")
+                    cod_assembly.append(f"  VCVT.F32.S32 {s1}, {s1}")
                 else:
-                    s1 = r1 # já é registrador VFP
+                    s1 = r1
 
-                # converte r2 para registrador VFP se ainda for inteiro
-                if not r2_float:
-                    s2 = f"S{vreg_count}"
-                    vreg_count += 1 # incrementa o contador de registradores VFP
-                    cod_assembly.append(f"  VMOV {s2}, {r2}") # move inteiro para VFP
-                    cod_assembly.append(f"  VCVT.F32.S32 {s2}, {s2}") # converte para float
+                if not r2_float: # converte r2 pra float se precisar
+                    s2 = alloc_s()
+                    cod_assembly.append(f"  VMOV {s2}, {r2}")
+                    cod_assembly.append(f"  VCVT.F32.S32 {s2}, {s2}")
                 else:
-                    s2 = r2 # já é registrador VFP
+                    s2 = r2
 
-                vfp_op = float_operations[token] # instrução VFP correspondente
-                s_res = f"S{vreg_count}" # registrador VFP para o resultado
-                vreg_count += 1 # incrementa o contador de registradores VFP
+                s_res = alloc_s()
+                cod_assembly.append(f"  {float_operations[token]} {s_res}, {s1}, {s2}")
+                stack.append((s_res, True))
 
-                cod_assembly.append(f"  {vfp_op} {s_res}, {s1}, {s2}") # realiza a operação VFP
+            else: # op inteira → instrução normal
+                cod_assembly.append(f"  {int_operations[token]} {r1}, {r1}, {r2}")
+                stack.append((r1, False))
 
-                stack.append((s_res, True)) # empilha o resultado como float
-                results.append((s_res, True)) # armazena o resultado
+        elif token.isalpha() and token.isupper() and token != "RES":
+            var_name = token
+            if stack and (tokens[i-1] == ")" or is_num(tokens[i-1])): # armazenamento
+                valor_reg, valor_float = stack.pop()
+                memory[var_name] = (f"addr_{var_name}", valor_float)
 
-            else: # ambos inteiros → usa instruções inteiras (ADD, SUB, MUL, SDIV, UDIV...)
-                int_op = int_operations[token] # instrução inteira correspondente
-                cod_assembly.append(f"  {int_op} {r1}, {r1}, {r2}") # realiza a operação inteira e atualiza o último registrador desempilhado com o resultado
-                stack.append((r1, False)) # empilha o resultado como inteiro
-                results.append((r1, False)) # armazena o resultado
+                if var_name not in variables:
+                    variables.append(var_name)
 
-        elif token.isalpha() and token.isupper() and token != "RES": # caso queira armazenar um valor em uma variável
-            var_name = token # nome da variável
-            valor_reg, valor_float = stack.pop() # desempilha o registrador do valor da pilha
+                reg_addr = alloc_r()
+                cod_assembly.append(f"  LDR {reg_addr}, =addr_{var_name}")
 
-            memory[var_name] = (valor_reg, valor_float) # armazena na memória com tipo
+                if valor_float:
+                    cod_assembly.append(f"  VSTR {valor_reg}, [{reg_addr}]")
+                else:
+                    cod_assembly.append(f"  STR {valor_reg}, [{reg_addr}]")
 
-            if var_name not in variables: # registra a variável para gerar a seção .data
-                variables.append(var_name)
+            else: # leitura
+                if var_name in memory:
+                    mem_label, stored_float = memory[var_name]
+                    if stored_float:
+                        reg_addr = alloc_r()
+                        s_reg    = alloc_s()
+                        cod_assembly.append(f"  LDR {reg_addr}, ={mem_label}")
+                        cod_assembly.append(f"  VLDR {s_reg}, [{reg_addr}]")
+                        stack.append((s_reg, True))
+                    else:
+                        reg = alloc_r()
+                        cod_assembly.append(f"  LDR {reg}, ={mem_label}")
+                        cod_assembly.append(f"  LDR {reg}, [{reg}]")
+                        stack.append((reg, False))
+                else: # variável não existe → 0
+                    reg = alloc_r()
+                    cod_assembly.append(f"  MOV {reg}, #0")
+                    stack.append((reg, False))
 
-            reg_addr = f"R{reg_count}" # registrador temporário para o endereço
-            reg_count += 1 # incrementa o contador de registradores inteiros
-            cod_assembly.append(f"  LDR {reg_addr}, =addr_{var_name}") # carrega o endereço da variável
+        elif token == "RES":
+            stack.pop() # descarta o N da pilha
+            n = int(tokens[i - 1])
+            linha_alvo = linha_atual - n
 
-            if valor_float: # valor float → usa VSTR para armazenar registrador VFP
-                cod_assembly.append(f"  VSTR {valor_reg}, [{reg_addr}]") # armazena float no endereço
-            else: # valor inteiro → usa STR para armazenar registrador inteiro
-                cod_assembly.append(f"  STR {valor_reg}, [{reg_addr}]") # armazena inteiro no endereço
+            if linha_alvo not in results:
+                raise Exception(f"RES fora do intervalo: linha {linha_alvo} não encontrada")
 
-        elif token == "RES": # caso seja o comando especial "RES"
-            print(f"Results: {results}")
-            n = int(tokens[i - 1]) # pega o valor de N
+            mem_label, origem_float = results[linha_alvo]
 
-            if n < len(results):
-                reg_origem, origem_float = results[-(n + 1)] # volta N resultados e pega o registrador do resultado
+            if origem_float:
+                reg_addr = alloc_r()
+                s_reg    = alloc_s()
+                cod_assembly.append(f"  LDR {reg_addr}, ={mem_label}")
+                cod_assembly.append(f"  VLDR {s_reg}, [{reg_addr}]")
+                stack.append((s_reg, True))
             else:
-                raise Exception("RES fora do intervalo")
+                reg = alloc_r()
+                cod_assembly.append(f"  LDR {reg}, ={mem_label}")
+                cod_assembly.append(f"  LDR {reg}, [{reg}]")
+                stack.append((reg, False))
 
-            if origem_float: # resultado é float → copia entre registradores VFP
-                new_reg = f"S{vreg_count}"
-                vreg_count += 1 # incrementa o contador de registradores VFP
-                cod_assembly.append(f"  VMOV {new_reg}, {reg_origem}") # copia o valor float recuperado
-                stack.append((new_reg, True)) # empilha como float
-            else: # resultado é inteiro → copia entre registradores inteiros
-                new_reg = f"R{reg_count}"
-                reg_count += 1 # incrementa o contador de registradores inteiros
-                cod_assembly.append(f"  MOV {new_reg}, {reg_origem}") # copia o valor inteiro recuperado
-                stack.append((new_reg, False)) # empilha como inteiro
+    # salva resultado final da linha na memória pra RES acessar depois
+    if stack:
+        res_reg, res_float = stack[-1]
+        res_label = f"result_{linha_atual}"
+        reg_addr  = alloc_r()
 
-        elif token.isalpha(): # caso seja qualquer token alfabético → carrega o valor da memória para um registrador
-            if token in memory: # se a variável existir
-                stored_reg, stored_float = memory[token] # recupera o tipo do valor armazenado
+        cod_assembly.append(f"  LDR {reg_addr}, ={res_label}")
+        if res_float:
+            cod_assembly.append(f"  VSTR {res_reg}, [{reg_addr}]")
+        else:
+            cod_assembly.append(f"  STR {res_reg}, [{reg_addr}]")
 
-                if stored_float: # variável float → carrega com VLDR para registrador VFP
-                    reg_addr = f"R{reg_count}"
-                    reg_count += 1 # incrementa o contador de registradores inteiros
-                    s_reg = f"S{vreg_count}"
-                    vreg_count += 1 # incrementa o contador de registradores VFP
-                    cod_assembly.append(f"  LDR {reg_addr}, =addr_{token}") # carrega o endereço da variável
-                    cod_assembly.append(f"  VLDR {s_reg}, [{reg_addr}]") # carrega o valor float do endereço
-                    stack.append((s_reg, True)) # empilha como float
-                else: # variável inteira → carrega com LDR para registrador inteiro
-                    reg = f"R{reg_count}"
-                    reg_count += 1 # incrementa o contador de registradores inteiros
-                    cod_assembly.append(f"  LDR {reg}, =addr_{token}") # carrega o endereço da variável
-                    cod_assembly.append(f"  LDR {reg}, [{reg}]") # carrega o valor inteiro do endereço
-                    stack.append((reg, False)) # empilha como inteiro
-
-            else: # caso a variável não existir → inicializa com 0 inteiro
-                reg = f"R{reg_count}"
-                reg_count += 1 # incrementa o contador de registradores inteiros
-                cod_assembly.append(f"  MOV {reg}, #0") # copia o valor 0 para a variável
-                stack.append((reg, False)) # empilha como inteiro
-
-    # gera a seção .data com variáveis e constantes float declaradas
-    cod_assembly.append("\n.data")
-    for var in variables:
-        cod_assembly.append(f"  addr_{var}: .word 0") # reserva espaço para cada variável inteira
-    for value, label in float_constants.items():
-        cod_assembly.append(f"  {label}: .float {value}") # declara cada constante float com seu label
-
-    return "\n".join(cod_assembly) # retorna a lista de códigos assembly como uma string única
+        results[linha_atual] = (res_label, res_float)
+        state["result_lines"].append((res_label, res_float))
