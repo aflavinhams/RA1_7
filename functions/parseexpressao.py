@@ -123,8 +123,8 @@ def estadoOperador(linha, i):
 
   # verificcando para caso da divisao inteira
   # se / vier seguido de outro /, eu salvo // no comando e pulo pra proxima posicao
-  if operador == '/' and i + 1 < len(linha) and linha[i+1] == '/':
-    operador == '//'
+  if operador == '/' and (i + 1) < len(linha) and linha[i+1] == '/':
+    operador = '//'
     i += 1
 
   # valido se é um dos operadores válidos
