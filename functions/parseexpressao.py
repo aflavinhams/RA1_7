@@ -121,8 +121,14 @@ def estadoOperador(linha, i):
   # pego o char da posicao atual
   operador = linha[i]
 
+  # verificcando para caso da divisao inteira
+  # se / vier seguido de outro /, eu salvo // no comando e pulo pra proxima posicao
+  if operador == '/' and i + 1 < len(linha) and linha[i+1] == '/':
+    operador == '//'
+    i += 1
+
   # valido se é um dos operadores válidos
-  if operador not in ['+', '-', '*', '/', '%', '^']:
+  if operador not in ['+', '-', '*', '/', '//', '%', '^']:
     raise ValueError("Operador inválido: " + operador)
 
   # retorno o operador e mando pra proxima posicao
@@ -147,36 +153,38 @@ def estadoComando(linha, i):
   # inicio o comando vazio
   comando = ''
 
-  # percorro a linha ate o final se for um char alphanumerico
-  while i < len(linha) and linha[i].isalpha():
+  # percorro a linha ate o final se for um char alphanumerico maiusculo
+  while i < len(linha) and linha[i].isalpha() and linha[i].isupper():
 
     # adiciono ao meu comando e pulo pra proxima posicao
     comando += linha[i]
     i += 1
 
-  # se não for um dos comandos especiais validos retorna erro
-  if comando not in ['RES', 'MEM']:
-    raise ValueError("Comando inválido: " + comando)
+  # se não for um comando valido retorna erro
+  if comando == '':
+    raise ValueError("Comando inválido")
 
   return comando, i
 
 # funcoes de testes
 def testes_validos():
   
-  print(parseEspressao("3 4 +"))
+  print(parseExpressao("3 4 //"))
 
-  print(parseEspressao("3.14 2 * MEM"))
+  print(parseExpressao("3.14 2 * MEM"))
 
-  print(parseEspressao("(3 + 2)"))
+  print(parseExpressao("(3 + 2)"))
 
 def teste_dois_pontos():
 
-  print(parseEspressao("3.14.5"))
+  print(parseExpressao("3.14.5"))
 
 def  teste_caractere_invalido():
 
-  parseEspressao("3 4 @")
+  parseExpressao("3 4 @")
 
 def teste_parenteses_desbalanceados():
 
-  parseEspressao("(3 + 2")
+  parseExpressao("(3 + 2")
+
+testes_validos()
