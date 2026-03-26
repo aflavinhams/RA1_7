@@ -12,19 +12,20 @@ resultados_py = {}
 linha = 1
 
 state = criarState()  # cria o estado compartilhado entre todas as linhas
+print("\n===== TOKENS =====\n")
 
 for line in arq:
     line_tokens = parseExpressao(line)
     print(line_tokens)
-
     executarExpressao(line_tokens, memoria, resultados_py, linha)
     gerarAssembly(line_tokens, state, linha)  # passa o número da linha atual
 
     linha += 1
 
-print(finalizarAssembly(state))  # gera o .data e exibe o assembly completo
+print("\n===== CÓDIGO ASSEMBLY =====\n")
+print(f"{finalizarAssembly(state)}\n")  # gera o .data e exibe o assembly completo
 
-print("===== EXECUTAR EXPRESSAO =====")
+print("===== EXECUTAR EXPRESSÃO =====\n")
 print(memoria)
 print(resultados_py)
 
