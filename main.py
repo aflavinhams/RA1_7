@@ -4,8 +4,8 @@ from functions.gerarAssembly import gerarAssembly
 from functions.exibirResultados import exibirResultados
 from functions.executarExpressao import executarExpressao
 
-print(f"Arquivo: {ler_arquivo('arquivosTeste/teste2.txt')}\n")
-arq = ler_arquivo("arquivosTeste/teste2.txt")
+print(f"Arquivo: {ler_arquivo('arquivosTeste/teste.txt')}\n")
+arq = ler_arquivo("arquivosTeste/teste.txt")
 
 valid_tokens = []
 resultados = []
@@ -29,4 +29,4 @@ print("===== EXECUTAR EXPRESSAO =====")
 print(memoria)
 print(resultados_py)
 
-exibirResultados(resultados)
+exibirResultados(resultados_py) 
