@@ -30,7 +30,7 @@ def finalizarAssembly(state):
     # chamado no final — gera a seção .data com tudo que foi usado
     state["cod_assembly"].append("\n.data")
 
-    # reserva espaço pra cada variável do tipo (ex: CONTADOR, MEM...)
+    # reserva espaço pra cada variável (ex: CONTADOR, MEM...)
     for var in state["variables"]:
         state["cod_assembly"].append(f"  addr_{var}: .word 0")
 
@@ -82,6 +82,14 @@ def gerarPOW(r1, r2, cod_assembly, reg_count, state):
     cod_assembly.append(f"{label_end}:")                                     # fim do loop
 
     return reg_result # devolve o registrador com o resultado final
+
+def floatParaInt(reg, cod_assembly, alloc_r):
+    # converte um registrador VFP (S) pra inteiro (r)
+    # necessário porque %, // e ^ só aceitam registradores r
+    cod_assembly.append(f"  VCVT.S32.F32 {reg}, {reg}") # converte float pra int dentro do VFP
+    novo_r = alloc_r() # aloca um registrador inteiro
+    cod_assembly.append(f"  VMOV {novo_r}, {reg}") # move o valor convertido pro registrador r
+    return novo_r # devolve o registrador inteiro com o valor
 
 def gerarAssembly(tokens, state, linha_atual):
     stack = []  # pilha da linha: cada item é (nome_registrador, é_float?)
@@ -159,13 +167,32 @@ def gerarAssembly(tokens, state, linha_atual):
             r1, r1_float = stack.pop()
             is_float_op = r1_float or r2_float # se qualquer um for float, a operação é float
 
-            if token == "%": # resto → não existe no ARMv7, usa SDIV + MLS
+            if token == "%": # resto → SDIV + MLS, só aceita registradores r
+                # converte pra inteiro se vier de operação float
+                if r1_float:
+                    r1 = floatParaInt(r1, cod_assembly, alloc_r)
+                if r2_float:
+                    r2 = floatParaInt(r2, cod_assembly, alloc_r)
                 gerarMOD(r1, r2, cod_assembly, reg_count)
                 stack.append((r1, False)) # resto fica em r1 após o MLS
 
-            elif token == "^": # potência → não existe no ARMv7, usa loop
+            elif token == "^": # potência → loop, só aceita registradores r
+                # converte pra inteiro se vier de operação float
+                if r1_float:
+                    r1 = floatParaInt(r1, cod_assembly, alloc_r)
+                if r2_float:
+                    r2 = floatParaInt(r2, cod_assembly, alloc_r)
                 reg_result = gerarPOW(r1, r2, cod_assembly, reg_count, state)
                 stack.append((reg_result, False))
+
+            elif token == "//": # divisão inteira → SDIV, só aceita registradores r
+                # converte pra inteiro se vier de operação float
+                if r1_float:
+                    r1 = floatParaInt(r1, cod_assembly, alloc_r)
+                if r2_float:
+                    r2 = floatParaInt(r2, cod_assembly, alloc_r)
+                cod_assembly.append(f"  SDIV {r1}, {r1}, {r2}") # divide e resultado fica em r1
+                stack.append((r1, False))
 
             elif token == "/" or (is_float_op and token in float_operations): # operação com float → VFP
                 if not r1_float: # r1 é inteiro, precisa converter pra float antes
