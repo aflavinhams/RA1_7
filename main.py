@@ -8,7 +8,7 @@ from functions.executarExpressao import executarExpressao
 
 def main():
     if len(sys.argv) < 2:
-        print(" python main.py teste1.txt")
+        print("python main.py teste1.txt")
         return
 
     caminho = sys.argv[1]
