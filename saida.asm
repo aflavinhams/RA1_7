@@ -108,7 +108,7 @@ pow_end_1:
   VLDR S4, [r3]
   VMUL.F32 S5, S3, S4
   VDIV.F32 S6, S2, S5
-  LDR r4, =result_8
+  LDR r4, =result_2
   VSTR S6, [r4]
   MOV r0, #90
   MOV r1, #2
