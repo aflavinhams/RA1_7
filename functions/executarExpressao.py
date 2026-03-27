@@ -59,7 +59,7 @@ def executarExpressao(tokens: list[str], memoria: dict[str, float], resultados: 
             # Exemplos: (1 MEM) ou ainda ((1 1 +) MEM)
             if stack and (tokens[i-1] == ")" or is_num(tokens[i-1])):
                 v = stack.pop()
-                memoria[token] = v
+                memoria[token] = v # Atualiza a memória
             # (MEM): retorna o valor armazenado em MEM
             else:
                 if token in memoria:
