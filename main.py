@@ -8,7 +8,7 @@ from functions.executarExpressao import executarExpressao
 
 def main():
     if len(sys.argv) < 2:
-        print(" python main.py teste1.txt")
+        print("Erro caminho do arquivo não especificado")
         return
 
     caminho = sys.argv[1]
@@ -22,7 +22,6 @@ def main():
     all_tokens = []
 
     state = criarState()  # cria o estado compartilhado entre todas as linhas
-    print(f"Arquivo: {ler_arquivo('arquivosTeste/teste2.txt')}\n")
     arq = ler_arquivo("arquivosTeste/teste2.txt")
 
 
