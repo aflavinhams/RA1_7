@@ -1,3 +1,12 @@
+'''
+Ana Flávia Martins dos Santos (@aflavinhams)
+Isabella Vanderlinde Berkembrock (@berkembrockisabella)
+Michele Cristina Otta (@micheleotta)
+Yejin Chung (@Chungyejin)
+
+Grupo RA1_7
+'''
+
 from functions.gerarAssembly import is_num
 
 # Função executarExpressao: validar o código Assembly que será gerado posteriormente
@@ -71,9 +80,8 @@ def executarExpressao(tokens: list[str], memoria: dict[str, float], resultados: 
     if stack: # Verificação pois o comando (V MEM) apenas armazena na memória, não retorna resultado!
         resultados[linha_atual] = stack.pop()
         
-'''
 # Função de teste para validar a execução de expressões e comandos especiais
-def testes():
+def testes_executarExpressao():
     testes =[
         ['(', '3.14', '2.0', '+', ')'],
         ['1', 'RES'],
@@ -106,4 +114,3 @@ def testes():
         linha += 1
     print(resultados)
     print(memoria)
-'''

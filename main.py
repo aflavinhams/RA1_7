@@ -50,7 +50,7 @@ def main():
 
 
     exibirResultados(resultados)
-    
+
 
 if __name__ == "__main__":
     main()
