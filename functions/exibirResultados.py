@@ -1,3 +1,11 @@
+'''
+Ana Flávia Martins dos Santos (@aflavinhams)
+Isabella Vanderlinde Berkembrock (@berkembrockisabella)
+Michele Cristina Otta (@micheleotta)
+Yejin Chung (@Chungyejin)
+
+Grupo RA1_7
+'''
 def exibirResultados(resultados):
     if not resultados: #Se não encontrar os resultados retorna frase que não encontrou
         print("Nenhum resultado encontrado.")
