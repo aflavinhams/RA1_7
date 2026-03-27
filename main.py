@@ -27,7 +27,6 @@ def main():
 
     # Quando o arquivo estiver vazio
     if not arq:
-        print("Erro: arquivo vazio ou inválido")
         return
 
     memoria = {}
