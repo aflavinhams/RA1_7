@@ -1,32 +1,59 @@
+import sys
+
 from functions.lerArquivo import ler_arquivo
 from functions.parseexpressao import parseExpressao
 from functions.gerarAssembly import gerarAssembly, criarState, finalizarAssembly
 from functions.exibirResultados import exibirResultados
 from functions.executarExpressao import executarExpressao
 
-print(f"Arquivo: {ler_arquivo('arquivosTeste/teste2.txt')}\n")
-arq = ler_arquivo("arquivosTeste/teste2.txt")
+def main():
+    if len(sys.argv) < 2:
+        print(" python main.py teste1.txt")
+        return
 
-memoria = {}
-resultados_py = {}
-linha = 1
+    caminho = sys.argv[1]
 
-state = criarState()  # cria o estado compartilhado entre todas as linhas
-print("\n===== TOKENS =====\n")
+    print(f"Arquivo: {caminho}\n")
+    arq = ler_arquivo(caminho)
 
-for line in arq:
-    line_tokens = parseExpressao(line)
-    print(line_tokens)
-    executarExpressao(line_tokens, memoria, resultados_py, linha)
-    gerarAssembly(line_tokens, state, linha)  # passa o número da linha atual
+    memoria = {}
+    resultados_py = {}
+    linha = 1
+    all_tokens = []
 
-    linha += 1
+    state = criarState()  # cria o estado compartilhado entre todas as linhas
+    print(f"Arquivo: {ler_arquivo('arquivosTeste/teste2.txt')}\n")
+    arq = ler_arquivo("arquivosTeste/teste2.txt")
 
-print("\n===== CÓDIGO ASSEMBLY =====\n")
-print(f"{finalizarAssembly(state)}\n")  # gera o .data e exibe o assembly completo
 
-print("===== EXECUTAR EXPRESSÃO =====\n")
-print(memoria)
-print(resultados_py)
+    for line in arq:
+        line_tokens = parseExpressao(line)
+        all_tokens.append(line_tokens)
+        
+        executarExpressao(line_tokens, memoria, resultados_py, linha)
+        gerarAssembly(line_tokens, state, linha)  # passa o número da linha atual
 
-exibirResultados(resultados_py)
+        all_tokens.append(line_tokens)
+        
+        linha += 1
+    
+    with open("tokens.txt", "w", encoding="utf-8") as f:
+        for linha_tokens in all_tokens:
+            f.write(str(linha_tokens) + "\n")
+
+
+    assembly_code = finalizarAssembly(state)
+
+    with open("saida.asm", "w", encoding="utf-8") as f:
+        f.write(assembly_code)
+
+    print("===== EXECUTAR EXPRESSÃO =====\n")
+    print(memoria)
+    print(resultados_py)
+
+
+    exibirResultados(resultados_py)
+    
+
+if __name__ == "__main__":
+    main()
