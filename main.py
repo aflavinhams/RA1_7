@@ -17,19 +17,17 @@ def main():
     arq = ler_arquivo(caminho)
 
     memoria = {}
-    resultados_py = {}
+    resultados = {}
     linha = 1
     all_tokens = []
 
     state = criarState()  # cria o estado compartilhado entre todas as linhas
-    arq = ler_arquivo("arquivosTeste/teste2.txt")
-
 
     for line in arq:
         line_tokens = parseExpressao(line)
         all_tokens.append(line_tokens)
         
-        executarExpressao(line_tokens, memoria, resultados_py, linha)
+        executarExpressao(line_tokens, memoria, resultados, linha)
         gerarAssembly(line_tokens, state, linha)  # passa o número da linha atual
 
         all_tokens.append(line_tokens)
@@ -48,10 +46,10 @@ def main():
 
     print("===== EXECUTAR EXPRESSÃO =====\n")
     print(memoria)
-    print(resultados_py)
+    print(resultados)
 
 
-    exibirResultados(resultados_py)
+    exibirResultados(resultados)
     
 
 if __name__ == "__main__":

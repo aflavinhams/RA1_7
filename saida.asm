@@ -34,14 +34,14 @@ pow_end_0:
   MOV r2, #50
   MOV r3, #5
   SDIV r2, r2, r3
+  ADD r0, r0, r2
   MOV r4, #1
   LDR r5, =result_2
   LDR r5, [r5]
   MOV r6, #10
   SDIV r7, r5, r6
   MLS r5, r7, r6, r5
-  ADD r2, r2, r5
-  ADD r0, r0, r2
+  ADD r0, r0, r5
   LDR r8, =result_3
   STR r0, [r8]
   LDR r0, =fconst_0
@@ -62,8 +62,18 @@ pow_end_0:
   MOV r1, #3
   SDIV r2, r0, r1
   MLS r0, r2, r1, r0
-  LDR r3, =result_5
-  STR r0, [r3]
+  MOV r3, #3
+  MOV r4, #1
+  MOV r5, r0
+pow_loop_1:
+  CMP r3, #0
+  BEQ pow_end_1
+  MUL r4, r4, r5
+  SUB r3, r3, #1
+  B pow_loop_1
+pow_end_1:
+  LDR r6, =result_5
+  STR r4, [r6]
   MOV r0, #1
   MOV r1, #11
   MOV r2, #2
@@ -103,13 +113,20 @@ pow_end_0:
   MOV r0, #90
   MOV r1, #2
   SDIV r0, r0, r1
-  LDR r2, =result_9
-  STR r0, [r2]
+  MOV r2, #5
+  SDIV r3, r0, r2
+  MLS r0, r3, r2, r0
+  LDR r4, =result_9
+  STR r0, [r4]
   MOV r0, #4
   LDR r1, =result_6
   LDR r1, [r1]
-  LDR r2, =result_10
-  STR r1, [r2]
+  MOV r2, #1
+  LDR r3, =result_9
+  LDR r3, [r3]
+  ADD r1, r1, r3
+  LDR r4, =result_10
+  STR r1, [r4]
 
 .data
   addr_AIMY: .word 0
