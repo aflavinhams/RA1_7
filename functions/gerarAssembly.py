@@ -1,3 +1,12 @@
+'''
+Ana Flávia Martins dos Santos (@aflavinhams)
+Isabella Vanderlinde Berkembrock (@berkembrockisabella)
+Michele Cristina Otta (@micheleotta)
+Yejin Chung (@Chungyejin)
+
+Grupo RA1_7
+'''
+
 def is_num(s):
     try:
         float(s) # tenta virar número
