@@ -1,10 +1,4 @@
-# APAGAR DEPOIS! -> Cópia da função do gerarAssembly.py
-def is_num(s):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
+from functions.gerarAssembly import is_num
 
 # Função executarExpressao: validar o código Assembly que será gerado posteriormente
 def executarExpressao(tokens: list[str], memoria: dict[str, float], resultados: dict[int, float], linha_atual: int):
@@ -78,37 +72,38 @@ def executarExpressao(tokens: list[str], memoria: dict[str, float], resultados: 
         resultados[linha_atual] = stack.pop()
         
 '''
-# TESTES
-testes =[
-    ['(', '3.14', '2.0', '+', ')'],
-    ['1', 'RES'],
-    ['(', '(', '1.5', '2.0', '*', ')', '(', '3.0', '4.0', '*', ')', '/', ')'],
-    ['(', '5.0', 'MEM', ')'],
-    ['(', '2', 'RES', ')'],
-    ['(', '10.5', 'CONTADOR', ')', 'CONTADOR'],
-    ["(", "15.5", "4.2", "*", ")", "(", "10", "5", "+", ")", "/"],
-    ["(", "10", "2", "^", ")", "(", "50", "5", "//", ")", "(", "1", "RES", "10", "%", ")", "+", "+"],
-    ["(", "25.5", "10.5", "+", ")", "(", "3.14", "MI", "MI", ")", "*"],
-    ["(", "(", "8", "2", "/", ")", "(", "3", "1", "-", ")", "*", ")", "(", "100", "50", "%", ")", "+"],
-    ["100", "(", "(", "5", "2", "%", ")", "(", "10", "2", "*", ")", "+", ")", "/"],
-    ['(', '10.5', 'MI', ')', 'MI'],
-    ['(', '(', '3', '9', '/' ,')', 'ANA', ')'],
-    ['(', '(', '2', '2', '^', ')', '(', '5', '10', '+', ')', '+', ')', 'ISA'],
-    ['(', '5', '(', 'MI', ')', '+', ')']
-    ]
+# Função de teste para validar a execução de expressões e comandos especiais
+def testes():
+    testes =[
+        ['(', '3.14', '2.0', '+', ')'],
+        ['1', 'RES'],
+        ['(', '(', '1.5', '2.0', '*', ')', '(', '3.0', '4.0', '*', ')', '/', ')'],
+        ['(', '5.0', 'MEM', ')'],
+        ['(', '2', 'RES', ')'],
+        ['(', '10.5', 'CONTADOR', ')', 'CONTADOR'],
+        ["(", "15.5", "4.2", "*", ")", "(", "10", "5", "+", ")", "/"],
+        ["(", "10", "2", "^", ")", "(", "50", "5", "//", ")", "(", "1", "RES", "10", "%", ")", "+", "+"],
+        ["(", "25.5", "10.5", "+", ")", "(", "3.14", "MI", "MI", ")", "*"],
+        ["(", "(", "8", "2", "/", ")", "(", "3", "1", "-", ")", "*", ")", "(", "100", "50", "%", ")", "+"],
+        ["100", "(", "(", "5", "2", "%", ")", "(", "10", "2", "*", ")", "+", ")", "/"],
+        ['(', '10.5', 'MI', ')', 'MI'],
+        ['(', '(', '3', '9', '/' ,')', 'ANA', ')'],
+        ['(', '(', '2', '2', '^', ')', '(', '5', '10', '+', ')', '+', ')', 'ISA'],
+        ['(', '5', '(', 'MI', ')', '+', ')']
+        ]
 
-# Contador da linha atual da expressão
-linha = 1
-# Estrutura de dicionário para gerenciar múltiplas variáveis na memória
-memoria = {}
-# Dicionário de histórico de resultados para exibirResultados
-# Estrutura -> 'número de linha': 'resultado'
-# Para lidar corretamente com a operação RES, considerando casos da operação MEM que não salva no histórico de resultados!
-resultados = {}
+    # Contador da linha atual da expressão
+    linha = 1
+    # Estrutura de dicionário para gerenciar múltiplas variáveis na memória
+    memoria = {}
+    # Dicionário de histórico de resultados para exibirResultados
+    # Estrutura -> 'número de linha': 'resultado'
+    # Para lidar corretamente com a operação RES, considerando casos da operação MEM que não salva no histórico de resultados!
+    resultados = {}
 
-for teste in testes:
-    executarExpressao(teste, memoria, resultados, linha)
-    linha += 1
-print(resultados)
-print(memoria)
+    for teste in testes:
+        executarExpressao(teste, memoria, resultados, linha)
+        linha += 1
+    print(resultados)
+    print(memoria)
 '''
