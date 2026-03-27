@@ -1,7 +1,9 @@
 # RA1_7
 
 ## PUCPR - Pontifícia Universidade Católica do Paraná
+
 Disciplina: Construção de Interpretadores
+
 Professor: Frank Coelho de Alcantara
 
 ## Alunas:
