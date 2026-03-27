@@ -7,7 +7,6 @@ Yejin Chung (@Chungyejin)
 Grupo RA1_7
 '''
 import sys #Usado para acessar sys.argv
-import os
 
 #Importar as funções
 from functions.lerArquivo import ler_arquivo
@@ -23,11 +22,6 @@ def main():
         print("Erro caminho do arquivo não especificado") # Se o usuário não passou, retorna a mensagem
         return
     caminho = sys.argv[1]
-
-    #Verificia se o arquivo existe
-    if not os.path.exists(caminho):
-        print("Erro: arquivo não encontrado")
-        return
 
     arq = ler_arquivo(caminho)
 
