@@ -7,6 +7,7 @@ Yejin Chung (@Chungyejin)
 Grupo RA1_7
 '''
 import sys #Usado para acessar sys.argv
+import os
 
 #Importar as funções
 from functions.lerArquivo import ler_arquivo
@@ -21,18 +22,30 @@ def main():
     if len(sys.argv) < 2: #Verifica se o usuário passou o nome do arquivo
         print("Erro caminho do arquivo não especificado") # Se o usuário não passou, retorna a mensagem
         return
+    caminho = sys.argv[1]
+
+    #Verificia se o arquivo existe
+    if not os.path.exists(caminho):
+        print("Erro: arquivo não encontrado")
+        return
+
+    arq = ler_arquivo(caminho)
+
+    # Quando o arquivo estiver vazio
+    if not arq:
+        print("Erro: arquivo vazio ou inválido")
+        return
+
+    memoria = {}
+    resultados = {}
+    linha = 1 
+    all_tokens = []
+
+    state = criarState()
 
     caminho = sys.argv[1] #Guarda o caminho do arquivo
-
-    print(f"Arquivo: {caminho}\n") #Imprime o arquivo que está sendo usado
     arq = ler_arquivo(caminho) #Lê o arquivo e retorna uma lista de linhas
 
-    memoria = {} #Guarda as variáveis
-    resultados = {} #Guarda o resultado de cada linha
-    linha = 1 
-    all_tokens = [] # Lista de tokens do arquivo
-
-    state = criarState()  # cria o estado compartilhado entre todas as linhas
 
     for line in arq:
         line_tokens = parseExpressao(line) #Transforma a linha em tokens
@@ -51,12 +64,8 @@ def main():
 
     assembly_code = finalizarAssembly(state) # Gera o código Assembly completo
 
-    with open("saida.asm", "w", encoding="utf-8") as f: #Salva o código Assembly
+    with open("saida.s", "w", encoding="utf-8") as f: #Salva o código Assembly
         f.write(assembly_code)
-
-    print("===== EXECUTAR EXPRESSÃO =====\n")
-    print(memoria)
-    print(resultados)
 
     exibirResultados(resultados)
 
