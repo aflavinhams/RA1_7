@@ -10,7 +10,7 @@ import sys #Usado para acessar sys.argv
 
 #Importar as funções
 from functions.lerArquivo import ler_arquivo
-from functions.parseexpressao import parseExpressao
+from functions.parseExpressao import parseExpressao
 from functions.gerarAssembly import gerarAssembly, criarState, finalizarAssembly
 from functions.exibirResultados import exibirResultados
 from functions.executarExpressao import executarExpressao
@@ -58,9 +58,8 @@ def main():
     print(memoria)
     print(resultados)
 
+    exibirResultados(resultados)
 
-    exibirResultados(resultados) #resultado formatados
-    
 
 if __name__ == "__main__":
     main()

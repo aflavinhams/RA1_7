@@ -2,6 +2,7 @@
 .arch_extension idiv
 .global _start
 _start:
+
   LDR r0, =fconst_0
   VLDR S0, [r0]
   LDR r1, =fconst_1
@@ -98,10 +99,7 @@ pow_end_0:
   VLDR S2, [r2]
   VSUB.F32 S3, S1, S2
   VADD.F32 S4, S0, S3
-  LDR r3, =result_10
-  VSTR S4, [r3]
 
-.data
   addr_Z: .word 0
   addr_P: .word 0
   result_1: .float 0.0
